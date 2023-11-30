@@ -80,8 +80,6 @@ namespace FNG
     }
     public abstract class InputConnector : Connector
     {
-        public readonly List<OutputConnector> Connections = new();
-
         public InputConnector(Node parent):base(parent)
         {
             parent.Inputs.Add(this);
@@ -94,24 +92,40 @@ namespace FNG
             parent.Outputs.Add(this);
         }
     }
-    public class DataInputConnector : InputConnector
+    public abstract class DataInputConnector : InputConnector
     {
         public readonly Type? CType;
-
+        public DataOutputConnector? Connection;
         public DataInputConnector(Node parent, Type type) : base(parent)
         {
             CType = type;
         }
     }
-    public class DataOutputConnector : OutputConnector
+    public abstract class DataOutputConnector : OutputConnector
     {
         public readonly Type? CType;
         public readonly object? Value;
+        public List<DataOutputConnector> Connections = new();
 
         public DataOutputConnector(Node parent, object value, Type? type) : base(parent)
         {
             Value = value;
             CType = type != null ? type : value.GetType();
+        }
+    }
+    public class ExecutionInputConnector : InputConnector
+    {
+        public List<ExecutionOutputConnector> Connections = new();
+        public string TargetFunction = "";
+        public ExecutionInputConnector(Node parent) : base(parent)
+        {
+        }
+    }
+    public class ExecutionOutputConnector : InputConnector
+    {
+        public ExecutionInputConnector? Connection;
+        public ExecutionOutputConnector(Node parent) : base(parent)
+        {
         }
     }
 }
