@@ -48,8 +48,8 @@ namespace FNG
         public string Name;
         public Graph Parent;
 
-        public Dictionary<ExecutionInputConnector, Action> ExecFunctions = new();
-        public Dictionary<DataOutputConnector, Action> DataFunctions = new();
+        public Dictionary<InputConnector, Action> ExecFunctions = new();
+        public Dictionary<OutputConnector, Action> DataFunctions = new();
 
         public List<InputConnector> Inputs = new();
         public List<OutputConnector> Outputs = new();
@@ -65,18 +65,28 @@ namespace FNG
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public void RunExeFunction(ExecutionInputConnector targetconnector) {
-            ExecFunctions[targetconnector]();
+        public void RunExeFunction(InputConnector targetconnector) {
+            if (targetconnector is ExecutionInputConnector)
+            {
+                ExecFunctions[targetconnector]();
+            }
             return;
         }
-        public void RunDataFunction(DataOutputConnector targetconnector)
+        public void RunDataFunction(OutputConnector targetconnector)
         {
-            DataFunctions[targetconnector]();
+            if (targetconnector is DataOutputConnector)
+            {
+                DataFunctions[targetconnector]();
+            }
             return;
         }
         public void Run() {
             // assuming port 0 is an exec here
-            
+            List<InputConnector> conn = Outputs[0].Connections;
+            if (conn.Count == 1)
+            {
+                conn[0].Parent.RunExeFunction(conn[0]);
+            }
         }
     }
     public abstract class Connector
@@ -100,6 +110,7 @@ namespace FNG
     }
     public abstract class OutputConnector : Connector
     {
+        public List<InputConnector> Connections = new();
         public OutputConnector(string name, Node parent):base(name, parent)
         {
             parent.Outputs.Add(this);
@@ -108,7 +119,6 @@ namespace FNG
     public abstract class DataInputConnector : InputConnector
     {
         public readonly Type CType;
-        public DataOutputConnector? Connection;
         public DataInputConnector(string name, Node parent, Type type):base(name, parent)
         {
             CType = type;
@@ -116,9 +126,8 @@ namespace FNG
     }
     public abstract class DataOutputConnector : OutputConnector
     {
-        public readonly Type? CType;
-        public readonly object? Value;
-        public List<DataOutputConnector> Connections = new();
+        public readonly Type CType;
+        public readonly object Value;
 
         public DataOutputConnector(string name, Node parent, object value, Type? type):base(name, parent)
         {
@@ -128,14 +137,12 @@ namespace FNG
     }
     public class ExecutionInputConnector : InputConnector
     {
-        public List<ExecutionOutputConnector> Connections = new();
         public ExecutionInputConnector(string name, Node parent):base(name, parent)
         {
         }
     }
     public class ExecutionOutputConnector : InputConnector
     {
-        public ExecutionInputConnector? Connection;
         public ExecutionOutputConnector(string name, Node parent):base(name, parent)
         {
         }
