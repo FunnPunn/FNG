@@ -48,55 +48,68 @@ namespace FNG
         public string Name;
         public Graph Parent;
 
-        public List<InputConnector> Inputs;
-        public List<OutputConnector> Outputs;
+        public Dictionary<ExecutionInputConnector, Action> ExecFunctions = new();
+        public Dictionary<DataOutputConnector, Action> DataFunctions = new();
 
-        public Node(string name, Graph parent, List<InputConnector> inputs, List<OutputConnector> outputs)
+        public List<InputConnector> Inputs = new();
+        public List<OutputConnector> Outputs = new();
+
+        public Node(string name, Graph parent)
         {
             GUID = Guid.NewGuid();
             Name = name;
             Parent = parent;
-            Inputs = inputs;
-            Outputs = outputs;
         }
         /// <summary>
         /// This should be overridden.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public void Run() {
+        public void RunExeFunction(ExecutionInputConnector targetconnector) {
+            ExecFunctions[targetconnector]();
             return;
+        }
+        public void RunDataFunction(DataOutputConnector targetconnector)
+        {
+            DataFunctions[targetconnector]();
+            return;
+        }
+        public void Run() {
+            // assuming port 0 is an exec here
+            
         }
     }
     public abstract class Connector
     {
         public string Name = "";
         public Node Parent;
-
-        public Connector(Node parent)
+        
+        public Connector(string name, Node parent)
         {
+            Name = name;
             Parent = parent;
         }
     }
     public abstract class InputConnector : Connector
     {
-        public InputConnector(Node parent):base(parent)
+        public List<OutputConnector> Connections = new();
+        public InputConnector(string name, Node parent):base(name, parent)
         {
             parent.Inputs.Add(this);
         }
     }
     public abstract class OutputConnector : Connector
     {
-        public OutputConnector(Node parent):base(parent)
+        public OutputConnector(string name, Node parent):base(name, parent)
         {
             parent.Outputs.Add(this);
         }
     }
     public abstract class DataInputConnector : InputConnector
     {
-        public readonly Type? CType;
+        public readonly Type CType;
         public DataOutputConnector? Connection;
-        public DataInputConnector(Node parent, Type type) : base(parent)
+        public DataInputConnector(string name, Node parent, Type type):base(name, parent)
         {
             CType = type;
         }
@@ -107,24 +120,23 @@ namespace FNG
         public readonly object? Value;
         public List<DataOutputConnector> Connections = new();
 
-        public DataOutputConnector(Node parent, object value, Type? type) : base(parent)
+        public DataOutputConnector(string name, Node parent, object value, Type? type):base(name, parent)
         {
             Value = value;
-            CType = type != null ? type : value.GetType();
+            CType = type ?? value.GetType();
         }
     }
     public class ExecutionInputConnector : InputConnector
     {
         public List<ExecutionOutputConnector> Connections = new();
-        public string TargetFunction = "";
-        public ExecutionInputConnector(Node parent) : base(parent)
+        public ExecutionInputConnector(string name, Node parent):base(name, parent)
         {
         }
     }
     public class ExecutionOutputConnector : InputConnector
     {
         public ExecutionInputConnector? Connection;
-        public ExecutionOutputConnector(Node parent) : base(parent)
+        public ExecutionOutputConnector(string name, Node parent):base(name, parent)
         {
         }
     }
