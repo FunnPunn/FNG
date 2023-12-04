@@ -27,7 +27,6 @@
         public void Remove(Node node) {
             Nodes.Remove(node);
         }
-
         public void Add(Graph graph) {
             SubGraphs.Add(graph);
         }
@@ -71,7 +70,7 @@
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public void RunExeFunction(InputConnector targetconnector) {
-            if (targetconnector is ExecutionInputConnector)
+            if (ExecFunctions.ContainsKey(targetconnector))
             {
                 ExecFunctions[targetconnector]();
             }
@@ -79,7 +78,7 @@
         }
         public void RunDataFunction(OutputConnector targetconnector)
         {
-            if (targetconnector is DataOutputConnector)
+            if (DataFunctions.ContainsKey(targetconnector))
             {
                 DataFunctions[targetconnector]();
             }
@@ -107,20 +106,38 @@
     public abstract class InputConnector : Connector
     {
         public List<OutputConnector> Connections = new();
-        public InputConnector(string name):base(name)
+        public InputConnector(string name):base(name) {}
+        public void Connect(OutputConnector targetConnector)
         {
             
+        }
+        public void Disconnect()
+        {
+            foreach (OutputConnector conn in Connections)
+            {
+                conn.Connections.Remove(this);
+                Connections.Remove(conn);
+            }
         }
     }
     public abstract class OutputConnector : Connector
     {
         public List<InputConnector> Connections = new();
-        public OutputConnector(string name):base(name)
+        public OutputConnector(string name):base(name) {}
+        public void Connect(OutputConnector targetConnector)
         {
-            
+
+        }
+        public void Disconnect()
+        {
+            foreach (InputConnector conn in Connections)
+            {
+                conn.Connections.Remove(this);
+                Connections.Remove(conn);
+            }
         }
     }
-    public abstract class DataInputConnector : InputConnector
+    public class DataInputConnector : InputConnector
     {
         public readonly Type CType;
         public DataInputConnector(string name, Type type):base(name)
@@ -128,7 +145,7 @@
             CType = type;
         }
     }
-    public abstract class DataOutputConnector : OutputConnector
+    public class DataOutputConnector : OutputConnector
     {
         public readonly Type CType;
         public readonly object Value;
@@ -141,14 +158,13 @@
     }
     public class ExecutionInputConnector : InputConnector
     {
-        public ExecutionInputConnector(string name):base(name)
-        {
-        }
+        public ExecutionInputConnector(string name):base(name) {}
     }
-    public class ExecutionOutputConnector : InputConnector
+    public class ExecutionOutputConnector : OutputConnector
     {
-        public ExecutionOutputConnector(string name):base(name)
-        {
-        }
+        public ExecutionOutputConnector(string name) : base(name) {}
+    }
+    public class UnknownFunctionException : Exception {
+        UnknownFunctionException() : base("A connector tried to activate its connection's function which doesn't exist.") {}
     }
 }
