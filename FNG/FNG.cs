@@ -14,6 +14,9 @@
         /// The subgraphs within this graph.
         /// </summary>
         public List<Graph> SubGraphs = new();
+        /// <summary>
+        /// There should be only one parentless graph. This will be the main graph.
+        /// </summary>
         public Graph? Parent;
         public static void Serialize() {
 
@@ -45,13 +48,22 @@
         public List<InputConnector> Inputs = new();
         public List<OutputConnector> Outputs = new();
 
-        public Node(string name, Graph parent, List<InputConnector> inputs, List<OutputConnector> outputs)
+        public Node(string name, Graph parent, List<InputConnector> inputs, List<OutputConnector> outputs, Dictionary<InputConnector, Action>? execfuncs, Dictionary<OutputConnector, Action>? datafuncs)
         {
             GUID = Guid.NewGuid();
             Name = name;
             Parent = parent;
             Inputs = inputs;
             Outputs = outputs;
+
+            if (execfuncs != null)
+            {
+                ExecFunctions = execfuncs;
+            }
+            if (datafuncs != null)
+            {
+                DataFunctions = datafuncs;
+            }
         }
         /// <summary>
         /// This should be overridden.
@@ -74,7 +86,7 @@
             return;
         }
         public void Run() {
-            // assuming port 0 is an exec here
+            // assuming the output connector at index 0 is an executor here
             List<InputConnector> conn = Outputs[0].Connections;
             if (conn.Count == 1 && conn[0].Parent != null)
             {
