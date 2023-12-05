@@ -22,10 +22,11 @@ namespace FNG
             parent.Nodes.Add(GUID, this);
         }
         /// <summary>
-        /// This should be overridden.
+        /// Manually run the execution function for a specific input exec on the node.<br/>
+        /// Please only use this when neccesary. You can now use ExecutionConnector.Run() instead.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
+        /// <param name="targetconnector"></param>
+        /// <exception cref="UnknownFunctionException"></exception>
         public virtual void RunExeFunction(InputConnector targetconnector)
         {
             if (ExecFunctions.TryGetValue(targetconnector, out Action? value))
@@ -35,6 +36,12 @@ namespace FNG
             else throw new UnknownFunctionException();
             return;
         }
+        /// <summary>
+        /// Manually run the data function for a specific output data connector on the node.<br/>
+        /// Please only use this when neccesary. You can now use ExecutionConnector.Run() instead.
+        /// </summary>
+        /// <param name="targetconnector"></param>
+        /// <exception cref="UnknownFunctionException"></exception>
         public virtual object RunDataFunction(OutputConnector targetconnector)
         {
             if (DataFunctions.TryGetValue(targetconnector, out Func<object?, object>? value))
@@ -46,13 +53,6 @@ namespace FNG
     }
     public class InputDefaultConnector : ScriptNode
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="parent"></param>
-        /// <param name="targetPort"></param>
-        /// <param name="value"></param>
-        /// <param name="type"></param>
         public InputDefaultConnector(Graph parent, DataInputConnector targetPort, object value, Type type) : base("", parent)
         {
             DataOutputConnector output = new("", value, type, this);
