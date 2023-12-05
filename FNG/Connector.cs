@@ -3,20 +3,27 @@
     public abstract class Connector
     {
         public string Name = "";
-        public ScriptNode? Parent;
+        public ScriptNode Parent;
         public int MaxConnections = 0;
         public Connector(string name, ScriptNode parent)
         {
             Name = name;
+            Parent = parent;
         }
     }
     public abstract class InputConnector : Connector
     {
         public List<OutputConnector> Connections = new();
-        public InputConnector(string name, ScriptNode parent) : base(name, parent) { }
+        public InputConnector(string name, ScriptNode parent) : base(name, parent) {
+            parent.Inputs.Add(this);
+        }
         public void Connect(OutputConnector targetConnector)
         {
-
+            ConnectionHandler.Connect(this, targetConnector);
+        }
+        public void Disconnect(OutputConnector targetConnector)
+        {
+            ConnectionHandler.Disconnect(this, targetConnector);
         }
         public void DisconnectAll()
         {
@@ -26,10 +33,16 @@
     public abstract class OutputConnector : Connector
     {
         public List<InputConnector> Connections = new();
-        public OutputConnector(string name, ScriptNode parent) : base(name, parent) { }
-        public void Connect(OutputConnector targetConnector)
+        public OutputConnector(string name, ScriptNode parent) : base(name, parent) {
+            parent.Outputs.Add(this);
+        }
+        public void Connect(InputConnector targetConnector)
         {
-
+            ConnectionHandler.Connect(targetConnector, this);
+        }
+        public void Disconnect(InputConnector targetConnector)
+        {
+            ConnectionHandler.Disconnect(targetConnector, this);
         }
         public void DisconnectAll()
         {
@@ -48,9 +61,9 @@
     public class DataOutputConnector : OutputConnector
     {
         public readonly Type CType;
-        public readonly object Value;
+        public object Value;
 
-        public DataOutputConnector(string name, object value, Type? type, ScriptNode parent) : base(name, parent)
+        public DataOutputConnector(string name, object value, Type type, ScriptNode parent) : base(name, parent)
         {
             Value = value;
             CType = type ?? value.GetType();
