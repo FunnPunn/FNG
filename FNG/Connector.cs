@@ -57,6 +57,10 @@
             CType = type;
             MaxConnections = 1;
         }
+        public object GetData()
+        {
+            return Connections[0].Parent.RunDataFunction(Connections[0]);
+        }
     }
     public class DataOutputConnector : OutputConnector
     {
@@ -69,6 +73,10 @@
             CType = type ?? value.GetType();
             MaxConnections = int.MaxValue;
         }
+        public object GetData()
+        {
+            return Parent.RunDataFunction(this);
+        }
     }
     public class ExecutionInputConnector : InputConnector
     {
@@ -76,12 +84,20 @@
         {
             MaxConnections = int.MaxValue;
         }
+        public void Run()
+        {
+            Parent.RunExeFunction(this);
+        }
     }
     public class ExecutionOutputConnector : OutputConnector
     {
         public ExecutionOutputConnector(string name, ScriptNode parent) : base(name, parent)
         {
             MaxConnections = 1;
+        }
+        public void Run()
+        {
+            ((ExecutionInputConnector) Connections[0]).Run();
         }
     }
 }

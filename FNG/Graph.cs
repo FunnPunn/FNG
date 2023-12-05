@@ -9,7 +9,7 @@
         /// <summary>
         /// The nodes that this graph contains.
         /// </summary>
-        public List<ScriptNode> Nodes = new();
+        public Dictionary<Guid, ScriptNode> Nodes = new();
         /// <summary>
         /// The subgraphs within this graph.
         /// </summary>
@@ -24,11 +24,11 @@
         }
         public void Add(ScriptNode node)
         {
-            Nodes.Add(node);
+            Nodes.Add(node.GUID, node);
         }
         public void Remove(ScriptNode node)
         {
-            Nodes.Remove(node);
+            Nodes.Remove(node.GUID);
         }
         public void Add(Graph graph)
         {
